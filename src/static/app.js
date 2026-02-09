@@ -29,11 +29,37 @@ document.addEventListener("DOMContentLoaded", () => {
             <strong>Participants (${details.participants.length}):</strong>
             ${details.participants.length > 0 ? `
               <ul class="participants-list">
-                ${details.participants.map(email => `<li>${email}</li>`).join('')}
+                ${details.participants.map(email => `<li><span class="participant-email">${email}</span><button class="delete-participant" data-activity="${name}" data-email="${email}" title="Remove participant">✕</button></li>`).join('')}
               </ul>
             ` : '<p class="no-participants">No participants yet</p>'}
           </div>
         `;
+        
+        // Add event listeners to delete buttons
+        activityCard.querySelectorAll('.delete-participant').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const activity = btn.getAttribute('data-activity');
+            const email = btn.getAttribute('data-email');
+            
+            try {
+              const response = await fetch(
+                `/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`,
+                { method: 'DELETE' }
+              );
+              
+              if (response.ok) {
+                // Refresh activities list
+                fetchActivities();
+              } else {
+                const error = await response.json();
+                console.error('Error unregistering:', error);
+              }
+            } catch (error) {
+              console.error('Error unregistering participant:', error);
+            }
+          });
+        });
 
 
         activitiesList.appendChild(activityCard);
